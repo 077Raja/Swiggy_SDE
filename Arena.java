@@ -7,40 +7,47 @@ public class Arena {
         this.player2 = player2;
     }
 
-    public void fight() {
-        Player attacker = determineFirstAttacker();
-        Player defender = (attacker == player1) ? player2 : player1;
+    public void start() {
+        System.out.println("The battle begins between " + player1.getName() + " and " + player2.getName() + "!");
 
-        while (!player1.isDead() && !player2.isDead()) {
-            attackTurn(attacker, defender);
+        while (player1.isAlive() && player2.isAlive()) {
+            Player attacker = (player1.getHealth() < player2.getHealth()) ? player1 : player2;
+            Player defender = (attacker == player1) ? player2 : player1;
+
+            executeTurn(attacker, defender);
+
+            if (defender.isDead()) {
+                System.out.println(defender.getName() + " has died. " + attacker.getName() + " wins!");
+                break;
+            }
+
+            // Swap roles for the next turn
             Player temp = attacker;
             attacker = defender;
             defender = temp;
-        }
 
-        System.out.println("Game Over!");
-        System.out.println("Player 1 Health: " + player1.getHealth());
-        System.out.println("Player 2 Health: " + player2.getHealth());
+            executeTurn(attacker, defender);
+
+            if (defender.isDead()) {
+                System.out.println(defender.getName() + " has died. " + attacker.getName() + " wins!");
+                break;
+            }
+        }
     }
 
-    private Player determineFirstAttacker() {
-        return (player1.getHealth() <= player2.getHealth()) ? player1 : player2;
-    }
+    private void executeTurn(Player attacker, Player defender) {
+        System.out.println(attacker.getName() + " attacks " + defender.getName());
 
-    private void attackTurn(Player attacker, Player defender) {
-        int attackRoll = attacker.rollAttackDice();
-        int defendRoll = defender.rollDefendDice();
+        int attackDamage = attacker.rollAttackDice();
+        int defense = defender.rollDefenseDice();
 
-        int attackDamage = attackRoll * attacker.getAttack();
-        int defendStrength = defendRoll * defender.getStrength();
+        int actualDamage = attackDamage - defense;
+        if (actualDamage < 0) actualDamage = 0;
 
-        int damage = attackDamage - defendStrength;
-        if (damage > 0) {
-            defender.takeDamage(damage);
-        }
+        defender.reduceHealth(actualDamage);
 
-        System.out.println("Attacker Roll: " + attackRoll + ", Attack Damage: " + attackDamage);
-        System.out.println("Defender Roll: " + defendRoll + ", Defend Strength: " + defendStrength);
-        System.out.println("Defender Health after attack: " + defender.getHealth());
+        System.out.println(attacker.getName() + " rolls attack dice and deals " + attackDamage + " damage.");
+        System.out.println(defender.getName() + " rolls defense dice and defends " + defense + " damage.");
+        System.out.println(defender.getName() + " receives " + actualDamage + " damage and now has " + defender.getHealth() + " health.");
     }
 }
